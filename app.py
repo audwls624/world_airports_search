@@ -7,18 +7,21 @@ app = Flask(__name__)
 @app.route('/search', methods=['GET'])
 def search():
     word = request.args.get('word')
-    conn = pymysql.connect(host='10.211.55.4',user='root',password='adsf25did',db='airport',charset='utf8mb4')
+    conn = pymysql.connect(host='localhost',user='root',password='adsf25did',db='airports',charset='utf8mb4')
     with conn.cursor() as cursor:
-        sql = f"SELECT * FROM countries JOIN airports ON countries.korean_name=airports.country_korean \
-            JOIN regions ON regions.name=countries.region \
-            WHERE countries.english_name LIKE '%{word}%' \
-        or regions.name LIKE '%{word}%' or countries.korean_name LIKE '%{word}%' or airports.english_name LIKE '%{word}%' \
-        or airports.korean_name LIKE '%{word}%' or airports.iata_code LIKE '%{word}%' or airports.icao_code LIKE '%{word}%' \
-        or airports.city_english LIKE '%{word}%' "
+        sql = f"SELECT * FROM continents \
+                JOIN countries on continents.ID=countries.continent_id \
+                JOIN cities on countries.ID=cities.country_id \
+                JOIN airports on cities.ID=airports.city_id \
+                where continents.korean_name LIKE '%{word}%' or countries.korean_name LIKE '%{word}%' \
+                or continents.english_name LIKE '%{word}%' or countries.english_name LIKE '%{word}%' \
+                or cities.english_name LIKE '%{word}%' or cities.korean_name LIKE '%{word}%' \
+                or airports.english_name LIKE '%{word}%' or airports.korean_name LIKE '%{word}%' \
+                or airports.iata_code LIKE '%{word}%' or airports.icao_code LIKE '%{word}%'"
         cursor.execute(sql)
-        data=[{'country(korean)':airport[0],
-            'country(english)':airport[1],'continent':airport[2],'airport(korean)':airport[3],'airport(english)':airport[4],
-            'IATA_code':airport[5],'ICAO_code':airport[6],'city(english)':airport[8]} for airport in cursor.fetchall()]
+        data=[{'continents(kor)':airport[1],'continents(eng)':airport[2],'country(kor)':airport[4],'country(eng)':airport[5],'city(eng)':airport[9],
+                'name(kor)':airport[12],'name(eng)':airport[13],'iata_code':airport[14],'icao_code':airport[15]} for airport in cursor.fetchall()]
+        print(data)
     conn.commit()
     conn.close()
     return jsonify({'data':data})
